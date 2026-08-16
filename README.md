@@ -1,56 +1,92 @@
-# Welcome to your Expo app 👋
+# Bebek Takibi
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+<p align="center">
+  <img src="https://img.shields.io/badge/React_Native-0.81-61DAFB?style=for-the-badge&logo=react&logoColor=black" alt="React Native" />
+  <img src="https://img.shields.io/badge/Expo-SDK_54-000000?style=for-the-badge&logo=expo&logoColor=white" alt="Expo" />
+  <img src="https://img.shields.io/badge/TypeScript-5.9-3178C6?style=for-the-badge&logo=typescript&logoColor=white" alt="TypeScript" />
+  <img src="https://img.shields.io/badge/NativeWind-4-06B6D4?style=for-the-badge&logo=tailwindcss&logoColor=white" alt="NativeWind" />
+  <img src="https://img.shields.io/badge/Zustand-5-443E38?style=for-the-badge" alt="Zustand" />
+</p>
 
-## Get started
+A simple React Native app for tracking a newborn's poop, piss, feed, and sleep — entirely on-device, with no login and no backend.
 
-1. Install dependencies
+> [!NOTE]
+> 🍼 **Project Status:** Functional and actively refined. Built as a minimal, local-first tracker — two screens plus a sleep-timer flow, nothing more.
+
+---
+
+## 🛠 Tech Stack
+
+| Domain            | Technology                                                                         |
+| :---------------- | :--------------------------------------------------------------------------------- |
+| **Framework**     | React Native (Expo)                                                                |
+| **Language**      | TypeScript                                                                         |
+| **Navigation**    | Expo Router (file-based, headless `Tabs` primitives for a custom floating nav bar) |
+| **Styling**       | NativeWind (Tailwind for React Native)                                             |
+| **State**         | Zustand, persisted to `@react-native-async-storage/async-storage`                  |
+| **Notifications** | `expo-notifications` (local only — no push, no server)                             |
+| **Lists**         | `@shopify/flash-list`                                                              |
+| **Animations**    | `react-native-reanimated`                                                          |
+| **Dates**         | `date-fns` (Turkish locale)                                                        |
+
+No backend, no analytics, no third-party services — every record lives in AsyncStorage on the device.
+
+---
+
+## 🚀 Getting Started
+
+### Prerequisites
+
+Node.js and npm, plus the [Expo Go](https://expo.dev/go) app on your phone (matching **SDK 54**) or a configured Android/iOS emulator.
+
+### Installation & Setup
+
+1. **Clone the repository and enter the project folder:**
+
+   ```bash
+   git clone https://github.com/mehmtcankilnc/NewbornTracker.git
+   cd BebekTakibi
+   ```
+
+2. **Install dependencies:**
 
    ```bash
    npm install
    ```
 
-2. Start the app
-
+3. **Run the app:**
    ```bash
    npx expo start
    ```
+   Scan the QR code with Expo Go, or press `a` / `i` for a connected emulator/simulator.
 
-In the output, you'll find options to open the app in a
+> [!IMPORTANT]
+> No `.env` file or credentials are needed — the app has no backend to configure. Everything runs and persists locally on the device.
 
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
+---
 
-You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
+## 📐 Technical Architecture & Decisions
 
-## Get a fresh project
+### 🗂️ Two screens, one flow
 
-When you're ready, run:
+- **Ekle (Add)** — a title-free header (date pill + optional baby-name input), four record-type cards, and a "today" stats strip.
+- **Kayıtlar (Records)** — day-grouped list with type and date-range filtering, swipe- or long-press-to-delete (with confirmation).
+- **Uyku Zamanlayıcısı (Stop Sleep)** — a third screen, reachable only via the sleep card or a notification tap, never part of the tab bar.
 
-```bash
-npm run reset-project
-```
+### 😴 Sleep tracking via local notification
 
-This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
+Starting a sleep record schedules a **local** (not push) notification: non-dismissable/sticky on Android, a best-effort persistent notification on iOS (a platform limitation, not a choice). Tapping it deep-links straight into the stop-sleep screen, which computes and saves the duration.
 
-### Other setup steps
+### 🧭 Custom floating tab bar
 
-- To set up ESLint for linting, run `npx expo lint`, or follow our guide on ["Using ESLint and Prettier"](https://docs.expo.dev/guides/using-eslint/)
-- If you'd like to set up unit testing, follow our guide on ["Unit Testing with Jest"](https://docs.expo.dev/develop/unit-testing/)
-- Learn more about the TypeScript setup in this template in our guide on ["Using TypeScript"](https://docs.expo.dev/guides/typescript/)
+The bottom nav isn't the OS-native tab bar — it's built on Expo Router's headless `Tabs`/`TabList`/`TabTrigger` primitives, styled as a floating pill with an animated sliding indicator (`react-native-reanimated`), to match the app's own design language instead of the platform default.
 
-## Learn more
+### 🔍 Filtering
 
-To learn more about developing your project with Expo, look at the following resources:
+Records can be filtered by type (multi-select) and by time period (today / week / month / a custom date range), combined with AND logic, without ever remounting the list — filtering only swaps the data passed to `FlashList`.
 
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
+---
 
-## Join the community
+## 📜 License
 
-Join our community of developers creating universal apps.
-
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+Distributed under the MIT License. Built as a personal project for tracking a newborn's day-to-day.
