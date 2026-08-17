@@ -1,6 +1,6 @@
 import type { Ionicons } from '@expo/vector-icons';
 
-import type { RecordType } from '@/types/record';
+import type { FeedSubtype, RecordType } from '@/types/record';
 
 interface RecordTypeMeta {
   label: string;
@@ -43,3 +43,15 @@ export const RECORD_TYPES: Record<RecordType, RecordTypeMeta> = {
 };
 
 export const RECORD_TYPE_ORDER: RecordType[] = ['poop', 'piss', 'feed', 'sleep'];
+
+export const FEED_SUBTYPE_LABELS: Record<FeedSubtype, string> = {
+  breastfeeding: 'Süt emme',
+  extra_breast_milk: 'Ekstra anne sütü',
+  extra_formula: 'Ekstra mama',
+};
+
+export const FEED_SUBTYPE_ORDER: FeedSubtype[] = [
+  'breastfeeding',
+  'extra_breast_milk',
+  'extra_formula',
+];

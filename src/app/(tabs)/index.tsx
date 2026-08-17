@@ -13,11 +13,12 @@ import { SafeAreaView } from "react-native-safe-area-context";
 
 import { TodayStats } from "@/components/records/TodayStats";
 import { Card } from "@/components/ui/Card";
+import { FeedDetailsSheet } from "@/components/ui/FeedDetailsSheet";
 import { TimePickerSheet } from "@/components/ui/TimePickerSheet";
 import { RECORD_TYPE_ORDER, RECORD_TYPES } from "@/constants/recordTypes";
 import { scheduleSleepNotification } from "@/services/notifications";
 import { useRecordsStore } from "@/stores/useRecordsStore";
-import type { RecordType } from "@/types/record";
+import type { FeedSubtype, RecordType } from "@/types/record";
 import { getTodayStats } from "@/utils/stats";
 import { formatTime, todayDateLabel } from "@/utils/time";
 
@@ -30,6 +31,7 @@ export default function AddRecordScreen() {
   const setBabyName = useRecordsStore((s) => s.setBabyName);
 
   const [pickerType, setPickerType] = useState<RecordType | null>(null);
+  const [pendingFeedTime, setPendingFeedTime] = useState<string | null>(null);
   const [toast, setToast] = useState<string | null>(null);
   const toastTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [nameInput, setNameInput] = useState(babyName);
@@ -71,10 +73,22 @@ export default function AddRecordScreen() {
       return;
     }
 
+    if (type === "feed") {
+      setPendingFeedTime(occurredAtIso);
+      return;
+    }
+
     addRecord(type, occurredAtIso);
     showToast(
       `${RECORD_TYPES[type].label} kaydedildi · ${formatTime(occurredAtIso)}`,
     );
+  }
+
+  function handleFeedDetailsConfirm(subtypes: FeedSubtype[], amountMl?: number) {
+    if (!pendingFeedTime) return;
+    addRecord("feed", pendingFeedTime, { feedSubtypes: subtypes, amountMl });
+    showToast(`Mama kaydedildi · ${formatTime(pendingFeedTime)}`);
+    setPendingFeedTime(null);
   }
 
   return (
@@ -162,6 +176,12 @@ export default function AddRecordScreen() {
         title={pickerType ? RECORD_TYPES[pickerType].question : ""}
         onSelect={handleTimeSelect}
         onClose={() => setPickerType(null)}
+      />
+
+      <FeedDetailsSheet
+        visible={pendingFeedTime !== null}
+        onConfirm={handleFeedDetailsConfirm}
+        onClose={() => setPendingFeedTime(null)}
       />
     </SafeAreaView>
   );

@@ -1,5 +1,7 @@
 export type RecordType = 'poop' | 'piss' | 'feed' | 'sleep';
 
+export type FeedSubtype = 'breastfeeding' | 'extra_breast_milk' | 'extra_formula';
+
 export interface BabyRecord {
   id: string;
   type: RecordType;
@@ -7,6 +9,8 @@ export interface BabyRecord {
   createdAt: string;
   endedAt?: string;
   durationMinutes?: number;
+  feedSubtypes?: FeedSubtype[];
+  amountMl?: number;
 }
 
 export interface ActiveSleep {

@@ -1,7 +1,7 @@
-import { Modal, Pressable, Text, View } from 'react-native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { Text, View } from 'react-native';
 
 import { Button } from '@/components/ui/Button';
+import { Sheet } from '@/components/ui/Sheet';
 
 interface ConfirmModalProps {
   visible: boolean;
@@ -22,24 +22,15 @@ export function ConfirmModal({
   onConfirm,
   onCancel,
 }: ConfirmModalProps) {
-  const insets = useSafeAreaInsets();
-
   return (
-    <Modal visible={visible} transparent animationType="fade" statusBarTranslucent onRequestClose={onCancel}>
-      <Pressable className="flex-1 bg-black/30 justify-end" onPress={onCancel}>
-        <Pressable
-          className="bg-surface rounded-t-3xl p-5"
-          style={{ paddingBottom: Math.max(insets.bottom, 20) + 12 }}
-          onPress={(e) => e.stopPropagation()}>
-          <Text className="text-ink text-lg font-semibold">{title}</Text>
-          <Text className="text-muted text-sm mt-1 mb-6">{message}</Text>
+    <Sheet visible={visible} onClose={onCancel} animationType="fade">
+      <Text className="text-ink text-lg font-semibold">{title}</Text>
+      <Text className="text-muted text-sm mt-1 mb-6">{message}</Text>
 
-          <View className="gap-3">
-            <Button label={confirmLabel} variant="destructive" onPress={onConfirm} />
-            <Button label={cancelLabel} variant="secondary" onPress={onCancel} />
-          </View>
-        </Pressable>
-      </Pressable>
-    </Modal>
+      <View className="gap-3">
+        <Button label={confirmLabel} variant="destructive" onPress={onConfirm} />
+        <Button label={cancelLabel} variant="secondary" onPress={onCancel} />
+      </View>
+    </Sheet>
   );
 }

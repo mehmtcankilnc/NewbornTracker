@@ -4,16 +4,17 @@ import { Pressable, Text, View } from 'react-native';
 import { Swipeable } from 'react-native-gesture-handler';
 
 import { ConfirmModal } from '@/components/ui/ConfirmModal';
-import { RECORD_TYPES } from '@/constants/recordTypes';
+import { FEED_SUBTYPE_LABELS, RECORD_TYPES } from '@/constants/recordTypes';
 import type { BabyRecord } from '@/types/record';
 import { formatDuration, formatTime } from '@/utils/time';
 
 interface RecordListItemProps {
   record: BabyRecord;
+  onPress: (record: BabyRecord) => void;
   onDelete: (id: string) => void;
 }
 
-export function RecordListItem({ record, onDelete }: RecordListItemProps) {
+export function RecordListItem({ record, onPress, onDelete }: RecordListItemProps) {
   const meta = RECORD_TYPES[record.type];
   const swipeableRef = useRef<Swipeable>(null);
   const [confirmVisible, setConfirmVisible] = useState(false);
@@ -48,9 +49,10 @@ export function RecordListItem({ record, onDelete }: RecordListItemProps) {
           </Pressable>
         )}>
         <Pressable
+          onPress={() => onPress(record)}
           onLongPress={askToDelete}
           accessibilityRole="button"
-          accessibilityLabel={`${meta.label}, saat ${formatTime(record.occurredAt)}, silmek için basılı tut veya sola kaydır`}
+          accessibilityLabel={`${meta.label}, saat ${formatTime(record.occurredAt)}, düzenlemek için dokun, silmek için basılı tut veya sola kaydır`}
           className="flex-row items-center gap-3 bg-surface-elevated border border-border rounded-2xl px-4 py-3 mb-2 active:opacity-70">
           <View
             className="h-10 w-10 rounded-full items-center justify-center"
@@ -64,6 +66,12 @@ export function RecordListItem({ record, onDelete }: RecordListItemProps) {
                 {formatTime(record.occurredAt)}
                 {record.endedAt ? ` – ${formatTime(record.endedAt)}` : ''} ·{' '}
                 {formatDuration(record.durationMinutes)}
+              </Text>
+            ) : record.type === 'feed' && record.feedSubtypes?.length ? (
+              <Text numberOfLines={1} className="text-muted text-xs mt-0.5">
+                {formatTime(record.occurredAt)} ·{' '}
+                {record.feedSubtypes.map((subtype) => FEED_SUBTYPE_LABELS[subtype]).join(', ')}
+                {record.amountMl != null ? ` · ${record.amountMl} ml` : ''}
               </Text>
             ) : (
               <Text className="text-muted text-xs mt-0.5">{formatTime(record.occurredAt)}</Text>

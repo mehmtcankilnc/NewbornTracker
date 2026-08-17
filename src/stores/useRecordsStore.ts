@@ -2,17 +2,32 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { create } from 'zustand';
 import { createJSONStorage, persist } from 'zustand/middleware';
 
-import type { ActiveSleep, BabyRecord, RecordType } from '@/types/record';
+import type { ActiveSleep, BabyRecord, FeedSubtype, RecordType } from '@/types/record';
+import { syncWidget } from '@/widgets/syncWidget';
+
+export interface FeedDetails {
+  feedSubtypes?: FeedSubtype[];
+  amountMl?: number;
+}
+
+export interface RecordEdits {
+  occurredAt: string;
+  feedSubtypes?: FeedSubtype[];
+  amountMl?: number;
+}
 
 interface RecordsState {
   records: BabyRecord[];
   activeSleep: ActiveSleep | null;
   babyName: string;
-  addRecord: (type: RecordType, occurredAt: string) => void;
+  hasHydrated: boolean;
+  addRecord: (type: RecordType, occurredAt: string, details?: FeedDetails) => void;
+  updateRecord: (id: string, edits: RecordEdits) => void;
   startSleep: (startedAt: string, notificationId?: string) => void;
   stopSleep: () => void;
   deleteRecord: (id: string) => void;
   setBabyName: (name: string) => void;
+  setHasHydrated: (value: boolean) => void;
 }
 
 function generateId(): string {
@@ -25,19 +40,40 @@ export const useRecordsStore = create<RecordsState>()(
       records: [],
       activeSleep: null,
       babyName: '',
+      hasHydrated: false,
 
-      addRecord: (type, occurredAt) => {
+      addRecord: (type, occurredAt, details) => {
         const record: BabyRecord = {
           id: generateId(),
           type,
           occurredAt,
           createdAt: new Date().toISOString(),
+          ...(details?.feedSubtypes?.length ? { feedSubtypes: details.feedSubtypes } : {}),
+          ...(details?.amountMl != null ? { amountMl: details.amountMl } : {}),
         };
         set({ records: [record, ...get().records] });
+        syncWidget();
+      },
+
+      updateRecord: (id, edits) => {
+        set({
+          records: get().records.map((r) =>
+            r.id === id
+              ? {
+                  ...r,
+                  occurredAt: edits.occurredAt,
+                  feedSubtypes: edits.feedSubtypes,
+                  amountMl: edits.amountMl,
+                }
+              : r
+          ),
+        });
+        syncWidget();
       },
 
       startSleep: (startedAt, notificationId) => {
         set({ activeSleep: { startedAt, notificationId } });
+        syncWidget();
       },
 
       stopSleep: () => {
@@ -62,19 +98,29 @@ export const useRecordsStore = create<RecordsState>()(
         };
 
         set({ records: [record, ...records], activeSleep: null });
+        syncWidget();
       },
 
       deleteRecord: (id) => {
         set({ records: get().records.filter((r) => r.id !== id) });
+        syncWidget();
       },
 
       setBabyName: (name) => {
         set({ babyName: name });
+        syncWidget();
+      },
+
+      setHasHydrated: (value) => {
+        set({ hasHydrated: value });
       },
     }),
     {
       name: 'bebektakibi-records',
       storage: createJSONStorage(() => AsyncStorage),
+      onRehydrateStorage: () => (state) => {
+        state?.setHasHydrated(true);
+      },
     }
   )
 );

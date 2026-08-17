@@ -38,31 +38,30 @@
         }
       ],
       [
-        "@react-native-community/datetimepicker",
-        {
-          "android": {
-            "timePicker": {
-              "background": {
-                "light": "#F2F0E3"
-              },
-              "headerBackground": {
-                "light": "#4B5723"
-              },
-              "numbersSelectorColor": {
-                "light": "#4B5723"
-              },
-              "numbersTextColor": {
-                "light": "#1C1B16"
-              }
-            }
-          }
-        }
-      ],
-      [
         "expo-notifications",
         {
           "icon": "./assets/images/icon.png",
           "color": "#4B5723"
+        }
+      ],
+      [
+        "react-native-android-widget",
+        {
+          "widgets": [
+            {
+              "name": "BebekWidget",
+              "label": "Bebek Takibi",
+              "description": "Son kayıtları gösterir, dokunarak hızlıca yeni kayıt ekle.",
+              "minWidth": "250dp",
+              "minHeight": "130dp",
+              "targetCellWidth": 4,
+              "targetCellHeight": 2,
+              "resizeMode": "horizontal|vertical",
+              "maxResizeWidth": "320dp",
+              "maxResizeHeight": "130dp",
+              "updatePeriodMillis": 1800000
+            }
+          ]
         }
       ]
     ],

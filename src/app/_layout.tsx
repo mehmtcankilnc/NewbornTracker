@@ -6,10 +6,11 @@ import * as Notifications from 'expo-notifications';
 import * as SplashScreen from 'expo-splash-screen';
 import { StatusBar } from 'expo-status-bar';
 import { useEffect } from 'react';
-import { View } from 'react-native';
+import { AppState, View } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 
 import { setupAndroidChannel } from '@/services/notifications';
+import { useRecordsStore } from '@/stores/useRecordsStore';
 
 SplashScreen.preventAutoHideAsync();
 
@@ -28,7 +29,16 @@ export default function RootLayout() {
     const subscription = Notifications.addNotificationResponseReceivedListener(
       routeIfSleepNotification
     );
-    return () => subscription.remove();
+
+    // Widget quick-add writes directly to AsyncStorage, so pick up those changes when returning to the app.
+    const appStateSubscription = AppState.addEventListener('change', (state) => {
+      if (state === 'active') useRecordsStore.persist.rehydrate();
+    });
+
+    return () => {
+      subscription.remove();
+      appStateSubscription.remove();
+    };
   }, []);
 
   return (

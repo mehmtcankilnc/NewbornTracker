@@ -22,10 +22,10 @@ export interface PeriodOption {
 }
 
 export const PERIOD_OPTIONS: PeriodOption[] = [
+  { key: 'all', label: 'Tümü' },
   { key: 'today', label: 'Bugün' },
   { key: 'week', label: 'Hafta' },
   { key: 'month', label: 'Ay' },
-  { key: 'all', label: 'Tümü' },
   { key: 'custom', label: 'Özel' },
 ];
 

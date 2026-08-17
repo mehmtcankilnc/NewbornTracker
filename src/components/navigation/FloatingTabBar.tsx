@@ -28,10 +28,10 @@ export function TabButton({ icon, label, isFocused, style: _style, ...props }: T
       accessibilityRole="button"
       accessibilityLabel={label}
       className="flex-1 flex-col items-center justify-center py-3">
-      <Ionicons name={icon} size={20} color={isFocused ? '#1C1B16' : '#8D8975'} />
+      <Ionicons name={icon} size={20} color={isFocused ? '#4B5723' : '#8D8975'} />
       <Text
         style={{ includeFontPadding: false }}
-        className={`text-xs mt-1 ${isFocused ? 'text-ink font-bold' : 'text-muted'}`}>
+        className={`text-xs mt-1 ${isFocused ? 'text-primary font-bold' : 'text-muted'}`}>
         {label}
       </Text>
     </Pressable>
