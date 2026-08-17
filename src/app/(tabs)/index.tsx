@@ -117,13 +117,22 @@ export default function AddRecordScreen() {
               </Text>
             </View>
 
-            <Pressable
-              onPress={() => router.push("/settings")}
-              accessibilityRole="button"
-              accessibilityLabel={t("home.settingsLabel")}
-              className="h-9 w-9 rounded-full items-center justify-center bg-surface-elevated dark:bg-surface-elevated-night active:opacity-70">
-              <Ionicons name="settings-outline" size={18} color={colors.ink} />
-            </Pressable>
+            <View className="flex-row items-center gap-2">
+              <Pressable
+                onPress={() => router.push("/stop-sleep")}
+                accessibilityRole="button"
+                accessibilityLabel="Debug: stop-sleep"
+                className="h-9 w-9 rounded-full items-center justify-center bg-surface-elevated dark:bg-surface-elevated-night active:opacity-70">
+                <Ionicons name="bug-outline" size={18} color={colors.ink} />
+              </Pressable>
+              <Pressable
+                onPress={() => router.push("/settings")}
+                accessibilityRole="button"
+                accessibilityLabel={t("home.settingsLabel")}
+                className="h-9 w-9 rounded-full items-center justify-center bg-surface-elevated dark:bg-surface-elevated-night active:opacity-70">
+                <Ionicons name="settings-outline" size={18} color={colors.ink} />
+              </Pressable>
+            </View>
           </View>
 
           <Text

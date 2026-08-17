@@ -104,6 +104,7 @@ export interface Translations {
     goHome: string;
     sleepingSince: string;
     stop: string;
+    selectEndTime: string;
   };
   tabs: {
     home: string;
@@ -260,6 +261,7 @@ export const tr: Translations = {
     goHome: "Ana Sayfa'ya dön",
     sleepingSince: "{{time}}'den beri uyuyor",
     stop: 'Uykuyu durdur',
+    selectEndTime: 'Uyku ne zaman bitti?',
   },
   tabs: {
     home: 'Ana Sayfa',
@@ -417,6 +419,7 @@ export const en: Translations = {
     goHome: 'Back to Home',
     sleepingSince: 'Sleeping since {{time}}',
     stop: 'Stop sleep',
+    selectEndTime: 'When did sleep end?',
   },
   tabs: {
     home: 'Home',

@@ -25,7 +25,7 @@ interface RecordsState {
   addRecord: (type: RecordType, occurredAt: string, details?: FeedDetails) => void;
   updateRecord: (id: string, edits: RecordEdits) => void;
   startSleep: (startedAt: string, notificationId?: string) => void;
-  stopSleep: () => void;
+  stopSleep: (endedAt?: string) => void;
   deleteRecord: (id: string) => void;
   clearRecords: () => void;
   setBabyName: (name: string) => void;
@@ -78,11 +78,11 @@ export const useRecordsStore = create<RecordsState>()(
         syncWidget();
       },
 
-      stopSleep: () => {
+      stopSleep: (endedAtOverride) => {
         const { activeSleep, records } = get();
         if (!activeSleep) return;
 
-        const endedAt = new Date().toISOString();
+        const endedAt = endedAtOverride ?? new Date().toISOString();
         const durationMinutes = Math.max(
           1,
           Math.round(
