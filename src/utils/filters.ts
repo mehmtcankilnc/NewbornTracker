@@ -6,8 +6,14 @@ import {
   isWithinInterval,
   startOfDay,
   startOfWeek,
+  type Locale,
 } from 'date-fns';
-import { tr } from 'date-fns/locale';
+import { tr as trLocale } from 'date-fns/locale';
+
+import { interpolate, resolve, type TFunction } from '@/i18n/core';
+import { tr as trDictionary } from '@/i18n/translations';
+
+const defaultT: TFunction = (key, params) => interpolate(resolve(trDictionary, key), params);
 
 export type Period = 'today' | 'week' | 'month' | 'all' | 'custom';
 
@@ -21,15 +27,22 @@ export interface PeriodOption {
   label: string;
 }
 
-export const PERIOD_OPTIONS: PeriodOption[] = [
-  { key: 'all', label: 'Tümü' },
-  { key: 'today', label: 'Bugün' },
-  { key: 'week', label: 'Hafta' },
-  { key: 'month', label: 'Ay' },
-  { key: 'custom', label: 'Özel' },
-];
+export function getPeriodOptions(t: TFunction = defaultT): PeriodOption[] {
+  return [
+    { key: 'all', label: t('records.periodAll') },
+    { key: 'today', label: t('records.periodToday') },
+    { key: 'week', label: t('records.periodWeek') },
+    { key: 'month', label: t('records.periodMonth') },
+    { key: 'custom', label: t('records.periodCustom') },
+  ];
+}
 
-export function isWithinPeriod(iso: string, period: Period, customRange?: DateRange | null): boolean {
+export function isWithinPeriod(
+  iso: string,
+  period: Period,
+  customRange?: DateRange | null,
+  locale: Locale = trLocale
+): boolean {
   if (period === 'all') return true;
 
   const date = new Date(iso);
@@ -38,8 +51,8 @@ export function isWithinPeriod(iso: string, period: Period, customRange?: DateRa
   if (period === 'today') return isToday(date);
   if (period === 'week') {
     return isWithinInterval(date, {
-      start: startOfWeek(now, { locale: tr }),
-      end: endOfWeek(now, { locale: tr }),
+      start: startOfWeek(now, { locale }),
+      end: endOfWeek(now, { locale }),
     });
   }
   if (period === 'month') return isSameMonth(date, now);

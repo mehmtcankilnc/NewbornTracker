@@ -1,43 +1,47 @@
-import { Ionicons } from '@expo/vector-icons';
-import { Text, View } from 'react-native';
+import { Ionicons } from "@expo/vector-icons";
+import { Text, View } from "react-native";
 
-import { RECORD_TYPES } from '@/constants/recordTypes';
-import type { TodayStats as TodayStatsData } from '@/utils/stats';
-import { formatDurationCompact } from '@/utils/time';
+import { useRecordTypeMeta } from "@/hooks/useRecordTypeMeta";
+import { useTranslation } from "@/i18n";
+import type { TodayStats as TodayStatsData } from "@/utils/stats";
+import { formatDurationCompact } from "@/utils/time";
 
 interface TodayStatsProps {
   stats: TodayStatsData;
 }
 
 export function TodayStats({ stats }: TodayStatsProps) {
+  const { t } = useTranslation();
+  const recordTypeMeta = useRecordTypeMeta();
+
   return (
-    <View className="bg-surface-elevated rounded-card p-4 mt-6">
-      <Text className="text-ink text-base font-bold self-start border-b-2 border-primary pb-1 mb-4">
-        Bugün
+    <View className="bg-surface-elevated dark:bg-surface-elevated-night rounded-card p-4 mt-6">
+      <Text className="text-ink dark:text-ink-night text-base font-bold self-start border-b-2 border-primary dark:border-primary-night pb-1 mb-4">
+        {t("todayStats.title")}
       </Text>
       <View className="flex-row">
         <StatColumn
-          icon={RECORD_TYPES.poop.icon}
-          color={RECORD_TYPES.poop.accent}
+          icon={recordTypeMeta.poop.icon}
+          color={recordTypeMeta.poop.accent}
           value={stats.poop}
         />
         <Divider />
         <StatColumn
-          icon={RECORD_TYPES.piss.icon}
-          color={RECORD_TYPES.piss.accent}
+          icon={recordTypeMeta.piss.icon}
+          color={recordTypeMeta.piss.accent}
           value={stats.piss}
         />
         <Divider />
         <StatColumn
-          icon={RECORD_TYPES.feed.icon}
-          color={RECORD_TYPES.feed.accent}
+          icon={recordTypeMeta.feed.icon}
+          color={recordTypeMeta.feed.accent}
           value={stats.feed}
         />
         <Divider />
         <StatColumn
-          icon={RECORD_TYPES.sleep.icon}
-          color={RECORD_TYPES.sleep.accent}
-          value={formatDurationCompact(stats.sleepMinutes)}
+          icon={recordTypeMeta.sleep.icon}
+          color={recordTypeMeta.sleep.accent}
+          value={formatDurationCompact(stats.sleepMinutes, t)}
         />
       </View>
     </View>
@@ -45,7 +49,7 @@ export function TodayStats({ stats }: TodayStatsProps) {
 }
 
 function Divider() {
-  return <View className="w-px bg-border mx-1" />;
+  return <View className="w-px bg-border dark:bg-border-night mx-1" />;
 }
 
 interface StatColumnProps {
@@ -58,8 +62,9 @@ function StatColumn({ icon, color, value }: StatColumnProps) {
   return (
     <View className="flex-1 items-center">
       <Ionicons name={icon} size={20} color={color} />
-      <Text className="text-ink text-2xl font-extrabold mt-1">{value}</Text>
-      <View className="w-6 border-b border-dashed border-border mt-1.5" />
+      <Text className="text-ink dark:text-ink-night text-2xl font-extrabold mt-1">
+        {value}
+      </Text>
     </View>
   );
 }

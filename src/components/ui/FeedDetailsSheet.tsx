@@ -4,7 +4,10 @@ import { Pressable, Text, TextInput, View } from 'react-native';
 
 import { Button } from '@/components/ui/Button';
 import { Sheet } from '@/components/ui/Sheet';
-import { FEED_SUBTYPE_LABELS, FEED_SUBTYPE_ORDER } from '@/constants/recordTypes';
+import { useFeedSubtypeLabels } from '@/hooks/useFeedSubtypeLabels';
+import { useTranslation } from '@/i18n';
+import { useAppTheme } from '@/theme/useAppTheme';
+import { FEED_SUBTYPE_ORDER } from '@/constants/recordTypes';
 import type { FeedSubtype } from '@/types/record';
 
 interface FeedDetailsSheetProps {
@@ -14,6 +17,9 @@ interface FeedDetailsSheetProps {
 }
 
 export function FeedDetailsSheet({ visible, onConfirm, onClose }: FeedDetailsSheetProps) {
+  const { t } = useTranslation();
+  const { colors } = useAppTheme();
+  const feedSubtypeLabels = useFeedSubtypeLabels();
   const [subtypes, setSubtypes] = useState<Set<FeedSubtype>>(new Set());
   const [amountInput, setAmountInput] = useState('');
 
@@ -45,7 +51,7 @@ export function FeedDetailsSheet({ visible, onConfirm, onClose }: FeedDetailsShe
 
   return (
     <Sheet visible={visible} onClose={onClose}>
-      <Text className="text-ink text-lg font-semibold mb-4">Mama türü</Text>
+      <Text className="text-ink dark:text-ink-night text-lg font-semibold mb-4">{t('feedDetails.title')}</Text>
 
       <View className="gap-2">
         {FEED_SUBTYPE_ORDER.map((option) => {
@@ -56,12 +62,13 @@ export function FeedDetailsSheet({ visible, onConfirm, onClose }: FeedDetailsShe
               onPress={() => toggleSubtype(option)}
               accessibilityRole="checkbox"
               accessibilityState={{ checked: isSelected }}
-              accessibilityLabel={FEED_SUBTYPE_LABELS[option]}
+              accessibilityLabel={feedSubtypeLabels[option]}
               className={`min-h-[48px] rounded-full flex-row items-center justify-between px-4 active:opacity-70 ${
-                isSelected ? 'bg-primary' : 'bg-surface-elevated'
+                isSelected ? 'bg-primary dark:bg-primary-night' : 'bg-surface-elevated dark:bg-surface-elevated-night'
               }`}>
-              <Text className={`text-base ${isSelected ? 'text-white font-semibold' : 'text-ink'}`}>
-                {FEED_SUBTYPE_LABELS[option]}
+              <Text
+                className={`text-base ${isSelected ? 'text-white font-semibold' : 'text-ink dark:text-ink-night'}`}>
+                {feedSubtypeLabels[option]}
               </Text>
               {isSelected && <Ionicons name="checkmark" size={18} color="#FFFFFF" />}
             </Pressable>
@@ -70,22 +77,24 @@ export function FeedDetailsSheet({ visible, onConfirm, onClose }: FeedDetailsShe
       </View>
 
       <View className="mt-4">
-        <Text className="text-muted text-xs font-semibold mb-1.5">Miktar (ml, opsiyonel)</Text>
+        <Text className="text-muted dark:text-muted-night text-xs font-semibold mb-1.5">
+          {t('feedDetails.amountLabel')}
+        </Text>
         <TextInput
           value={amountInput}
           onChangeText={setAmountInput}
-          placeholder="Örn. 120"
-          placeholderTextColor="#8D8975"
+          placeholder={t('feedDetails.amountPlaceholder')}
+          placeholderTextColor={colors.muted}
           keyboardType="numeric"
           maxLength={4}
-          accessibilityLabel="Miktar (ml)"
-          className="bg-surface-elevated rounded-full px-4 h-12 text-ink text-base"
+          accessibilityLabel={t('feedDetails.amountLabel')}
+          className="bg-surface-elevated dark:bg-surface-elevated-night rounded-full px-4 h-12 text-ink dark:text-ink-night text-base"
         />
       </View>
 
       <View className="mt-5 gap-3">
-        <Button label="Kaydet" onPress={handleConfirm} disabled={subtypes.size === 0} />
-        <Button label="İptal" variant="secondary" onPress={onClose} />
+        <Button label={t('feedDetails.save')} onPress={handleConfirm} disabled={subtypes.size === 0} />
+        <Button label={t('feedDetails.cancel')} variant="secondary" onPress={onClose} />
       </View>
     </Sheet>
   );

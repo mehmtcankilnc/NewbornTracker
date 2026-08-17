@@ -9,8 +9,12 @@ interface ButtonProps {
 
 export function Button({ label, onPress, variant = 'primary', disabled }: ButtonProps) {
   const fillClass =
-    variant === 'primary' ? 'bg-primary' : variant === 'destructive' ? 'bg-danger' : 'bg-surface-elevated border border-border';
-  const textClass = variant === 'secondary' ? 'text-ink' : 'text-white';
+    variant === 'primary'
+      ? 'bg-primary dark:bg-primary-night'
+      : variant === 'destructive'
+        ? 'bg-danger dark:bg-danger-night'
+        : 'bg-surface-elevated dark:bg-surface-elevated-night border border-border dark:border-border-night';
+  const textClass = variant === 'secondary' ? 'text-ink dark:text-ink-night' : 'text-white';
 
   return (
     <Pressable

@@ -6,8 +6,10 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { Button } from '@/components/ui/Button';
 import { useElapsedTime } from '@/hooks/useElapsedTime';
+import { useTranslation } from '@/i18n';
 import { dismissSleepNotification } from '@/services/notifications';
 import { useRecordsStore } from '@/stores/useRecordsStore';
+import { useAppTheme } from '@/theme/useAppTheme';
 import { formatTime } from '@/utils/time';
 
 function goHome() {
@@ -17,21 +19,25 @@ function goHome() {
 }
 
 function Header() {
+  const { t } = useTranslation();
+  const { colors } = useAppTheme();
+
   return (
     <View className="flex-row items-center px-5 pt-4 pb-2">
       <Pressable
         onPress={goHome}
         accessibilityRole="button"
-        accessibilityLabel="Geri"
-        className="h-9 w-9 rounded-full items-center justify-center bg-surface-elevated active:opacity-70">
-        <Ionicons name="arrow-back" size={18} color="#1C1B16" />
+        accessibilityLabel={t('stopSleep.back')}
+        className="h-9 w-9 rounded-full items-center justify-center bg-surface-elevated dark:bg-surface-elevated-night active:opacity-70">
+        <Ionicons name="arrow-back" size={18} color={colors.ink} />
       </Pressable>
-      <Text className="text-ink text-base font-bold ml-3">Uyku Zamanlayıcısı</Text>
+      <Text className="text-ink dark:text-ink-night text-base font-bold ml-3">{t('stopSleep.title')}</Text>
     </View>
   );
 }
 
 export default function StopSleepScreen() {
+  const { t } = useTranslation();
   const activeSleep = useRecordsStore((s) => s.activeSleep);
   const stopSleep = useRecordsStore((s) => s.stopSleep);
   const elapsed = useElapsedTime(activeSleep?.startedAt);
@@ -51,32 +57,34 @@ export default function StopSleepScreen() {
 
   if (!activeSleep) {
     return (
-      <SafeAreaView className="flex-1 bg-surface" edges={['top', 'left', 'right']}>
+      <SafeAreaView className="flex-1 bg-surface dark:bg-surface-night" edges={['top', 'left', 'right']}>
         <Header />
         <View className="flex-1 items-center justify-center px-8">
-          <Text className="text-ink text-lg font-semibold text-center">Devam eden uyku yok</Text>
-          <Text className="text-muted text-sm text-center mt-1 mb-6">
-            Bu uyku kaydı zaten durduruldu.
+          <Text className="text-ink dark:text-ink-night text-lg font-semibold text-center">
+            {t('stopSleep.noActiveSleep')}
           </Text>
-          <Button label="Ana Sayfa'ya dön" onPress={goHome} />
+          <Text className="text-muted dark:text-muted-night text-sm text-center mt-1 mb-6">
+            {t('stopSleep.alreadyStopped')}
+          </Text>
+          <Button label={t('stopSleep.goHome')} onPress={goHome} />
         </View>
       </SafeAreaView>
     );
   }
 
   return (
-    <SafeAreaView className="flex-1 bg-surface" edges={['top', 'left', 'right']}>
+    <SafeAreaView className="flex-1 bg-surface dark:bg-surface-night" edges={['top', 'left', 'right']}>
       <Header />
       <View className="flex-1 items-center justify-center px-8">
-        <Text className="text-muted text-sm">
-          {`${formatTime(activeSleep.startedAt)}'den beri uyuyor`}
+        <Text className="text-muted dark:text-muted-night text-sm">
+          {t('stopSleep.sleepingSince', { time: formatTime(activeSleep.startedAt) })}
         </Text>
         <Text
-          className="text-ink text-5xl font-bold mt-3 mb-10"
+          className="text-ink dark:text-ink-night text-5xl font-bold mt-3 mb-10"
           style={{ fontVariant: ['tabular-nums'] }}>
           {elapsed}
         </Text>
-        <Button label="Uykuyu durdur" onPress={handleStop} />
+        <Button label={t('stopSleep.stop')} onPress={handleStop} />
       </View>
     </SafeAreaView>
   );

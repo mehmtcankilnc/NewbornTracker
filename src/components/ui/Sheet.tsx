@@ -55,7 +55,7 @@ export function Sheet({ visible, onClose, children, animationType = 'slide' }: S
           <Pressable className="flex-1 bg-black/30 justify-end" onPress={onClose}>
             <Animated.View style={animatedStyle}>
               <Pressable
-                className="bg-surface rounded-t-3xl px-5 pb-5"
+                className="bg-surface dark:bg-surface-night rounded-t-3xl px-5 pb-5"
                 style={{ paddingBottom: Math.max(insets.bottom, 20) + 12 }}
                 onPress={(e) => {
                   e.stopPropagation();
@@ -63,7 +63,7 @@ export function Sheet({ visible, onClose, children, animationType = 'slide' }: S
                 }}>
                 <GestureDetector gesture={pan}>
                   <View className="items-center pt-3 pb-2 -mx-5 px-5">
-                    <View className="w-10 h-1.5 rounded-full bg-border" />
+                    <View className="w-10 h-1.5 rounded-full bg-border dark:bg-border-night" />
                   </View>
                 </GestureDetector>
                 {children}

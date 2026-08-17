@@ -1,10 +1,12 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
-import { dismissSleepNotification } from '@/services/notifications';
-import type { ActiveSleep, BabyRecord, RecordType } from '@/types/record';
+import { dismissSleepNotification } from '@/services/dismissSleepNotification';
+import type { ActiveSleep, BabyRecord, FeedSubtype, RecordType } from '@/types/record';
 
 /** Must match the zustand `persist` name in useRecordsStore, since the widget reads/writes the same key directly. */
 const STORAGE_KEY = 'bebektakibi-records';
+/** Must match the zustand `persist` name in useSettingsStore. */
+const SETTINGS_STORAGE_KEY = 'bebektakibi-settings';
 
 interface PersistedState {
   records: BabyRecord[];
@@ -36,6 +38,26 @@ export async function getWidgetSnapshot(): Promise<PersistedState> {
   return readState();
 }
 
+export interface WidgetSettings {
+  themeMode: 'light' | 'dark' | 'system';
+  language: 'tr' | 'en';
+}
+
+/** Reads the same persisted preferences the app's Ayarlar screen writes, so the widget always matches. */
+export async function getWidgetSettings(): Promise<WidgetSettings> {
+  const raw = await AsyncStorage.getItem(SETTINGS_STORAGE_KEY);
+  if (!raw) return { themeMode: 'system', language: 'tr' };
+
+  const parsed = JSON.parse(raw);
+  return {
+    themeMode: parsed.state?.themeMode ?? 'system',
+    language: parsed.state?.language ?? 'tr',
+  };
+}
+
+/** Quick-add from the widget skips the app's feed-detail picker, so a feed record defaults to breastfeeding. */
+const DEFAULT_FEED_SUBTYPE: FeedSubtype = 'breastfeeding';
+
 export async function addRecordFromWidget(type: RecordType): Promise<void> {
   const state = await readState();
   const record: BabyRecord = {
@@ -43,6 +65,7 @@ export async function addRecordFromWidget(type: RecordType): Promise<void> {
     type,
     occurredAt: new Date().toISOString(),
     createdAt: new Date().toISOString(),
+    ...(type === 'feed' ? { feedSubtypes: [DEFAULT_FEED_SUBTYPE] } : {}),
   };
   await writeState({ ...state, records: [record, ...state.records] });
 }

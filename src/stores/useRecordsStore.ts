@@ -2,6 +2,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { create } from 'zustand';
 import { createJSONStorage, persist } from 'zustand/middleware';
 
+import { dismissSleepNotification } from '@/services/notifications';
 import type { ActiveSleep, BabyRecord, FeedSubtype, RecordType } from '@/types/record';
 import { syncWidget } from '@/widgets/syncWidget';
 
@@ -26,6 +27,7 @@ interface RecordsState {
   startSleep: (startedAt: string, notificationId?: string) => void;
   stopSleep: () => void;
   deleteRecord: (id: string) => void;
+  clearRecords: () => void;
   setBabyName: (name: string) => void;
   setHasHydrated: (value: boolean) => void;
 }
@@ -103,6 +105,13 @@ export const useRecordsStore = create<RecordsState>()(
 
       deleteRecord: (id) => {
         set({ records: get().records.filter((r) => r.id !== id) });
+        syncWidget();
+      },
+
+      clearRecords: () => {
+        const { activeSleep } = get();
+        dismissSleepNotification(activeSleep?.notificationId);
+        set({ records: [], activeSleep: null });
         syncWidget();
       },
 

@@ -1,7 +1,18 @@
 import * as Notifications from 'expo-notifications';
 import { Alert, Platform } from 'react-native';
 
+import { interpolate, resolve, type TranslationKey } from '@/i18n/core';
+import { en, tr } from '@/i18n/translations';
+import { useSettingsStore } from '@/stores/useSettingsStore';
+
+export { dismissSleepNotification } from './dismissSleepNotification';
+
 const SLEEP_CHANNEL_ID = 'sleep-tracking';
+
+function t(key: TranslationKey, params?: Record<string, string | number>): string {
+  const dictionary = useSettingsStore.getState().language === 'en' ? en : tr;
+  return interpolate(resolve(dictionary, key), params);
+}
 
 Notifications.setNotificationHandler({
   handleNotification: async () => ({
@@ -15,7 +26,7 @@ Notifications.setNotificationHandler({
 export async function setupAndroidChannel(): Promise<void> {
   if (Platform.OS !== 'android') return;
   await Notifications.setNotificationChannelAsync(SLEEP_CHANNEL_ID, {
-    name: 'Uyku takibi',
+    name: t('notifications.channelName'),
     importance: Notifications.AndroidImportance.HIGH,
     lockscreenVisibility: Notifications.AndroidNotificationVisibility.PUBLIC,
   });
@@ -30,15 +41,11 @@ export async function ensureNotificationPermission(): Promise<boolean> {
   if (existing.granted) return true;
   if (!existing.canAskAgain) return false;
 
-  const primed = await new Promise<boolean>((resolve) => {
-    Alert.alert(
-      'Uyku süresini takip et',
-      'Bebeğiniz uyurken bir bildirim göstereceğiz, böylece uyandığında zamanlayıcıyı hızlıca durdurabilirsiniz.',
-      [
-        { text: 'Şimdi değil', style: 'cancel', onPress: () => resolve(false) },
-        { text: 'Devam et', onPress: () => resolve(true) },
-      ]
-    );
+  const primed = await new Promise<boolean>((resolveAlert) => {
+    Alert.alert(t('notifications.primeTitle'), t('notifications.primeMessage'), [
+      { text: t('notifications.notNow'), style: 'cancel', onPress: () => resolveAlert(false) },
+      { text: t('notifications.continueLabel'), onPress: () => resolveAlert(true) },
+    ]);
   });
   if (!primed) return false;
 
@@ -47,6 +54,8 @@ export async function ensureNotificationPermission(): Promise<boolean> {
 }
 
 export async function scheduleSleepNotification(startedAt: string): Promise<string | undefined> {
+  if (!useSettingsStore.getState().notificationsEnabled) return undefined;
+
   const granted = await ensureNotificationPermission();
   if (!granted) return undefined;
 
@@ -59,8 +68,8 @@ export async function scheduleSleepNotification(startedAt: string): Promise<stri
 
   const id = await Notifications.scheduleNotificationAsync({
     content: {
-      title: 'Uyku devam ediyor',
-      body: `${startedLabel}'den beri uyuyor · Durdurmak için dokun`,
+      title: t('notifications.ongoingTitle'),
+      body: t('notifications.ongoingBody', { time: startedLabel }),
       data: { type: 'sleep' },
       sticky: Platform.OS === 'android',
       autoDismiss: false,
@@ -70,9 +79,4 @@ export async function scheduleSleepNotification(startedAt: string): Promise<stri
   });
 
   return id;
-}
-
-export async function dismissSleepNotification(notificationId?: string): Promise<void> {
-  if (!notificationId) return;
-  await Notifications.dismissNotificationAsync(notificationId).catch(() => undefined);
 }

@@ -9,7 +9,9 @@ import { RecordFilters } from '@/components/records/RecordFilters';
 import { RecordListItem } from '@/components/records/RecordListItem';
 import { RecordListSkeleton } from '@/components/records/RecordListSkeleton';
 import { Button } from '@/components/ui/Button';
-import { FEED_SUBTYPE_LABELS, FEED_SUBTYPE_ORDER } from '@/constants/recordTypes';
+import { FEED_SUBTYPE_ORDER } from '@/constants/recordTypes';
+import { useFeedSubtypeLabels } from '@/hooks/useFeedSubtypeLabels';
+import { useTranslation, type TFunction } from '@/i18n';
 import { useRecordsStore } from '@/stores/useRecordsStore';
 import type { BabyRecord, FeedSubtype, RecordType } from '@/types/record';
 import { isWithinPeriod, type DateRange, type Period } from '@/utils/filters';
@@ -20,7 +22,11 @@ type ListRow =
   | { kind: 'record'; record: BabyRecord };
 
 /** e.g. "3 süt emme · 1 ekstra mama" for a day's feed records, skipping subtypes with no records that day. */
-function buildFeedBreakdown(records: BabyRecord[]): string {
+function buildFeedBreakdown(
+  records: BabyRecord[],
+  feedSubtypeLabels: Record<FeedSubtype, string>,
+  t: TFunction
+): string {
   const counts: Partial<Record<FeedSubtype, number>> = {};
   let untyped = 0;
 
@@ -35,14 +41,17 @@ function buildFeedBreakdown(records: BabyRecord[]): string {
   }
 
   const parts = FEED_SUBTYPE_ORDER.filter((subtype) => counts[subtype]).map(
-    (subtype) => `${counts[subtype]} ${FEED_SUBTYPE_LABELS[subtype].toLowerCase()}`
+    (subtype) => `${counts[subtype]} ${feedSubtypeLabels[subtype].toLowerCase()}`
   );
-  if (untyped > 0) parts.push(`${untyped} diğer`);
+  if (untyped > 0) parts.push(`${untyped} ${t('records.other')}`);
 
   return parts.join(' · ');
 }
 
 export default function RecordsScreen() {
+  const { t, dateFnsLocale } = useTranslation();
+  const feedSubtypeLabels = useFeedSubtypeLabels();
+
   const records = useRecordsStore((s) => s.records);
   const hasHydrated = useRecordsStore((s) => s.hasHydrated);
   const deleteRecord = useRecordsStore((s) => s.deleteRecord);
@@ -73,34 +82,34 @@ export default function RecordsScreen() {
   const filteredRecords = useMemo(() => {
     return records.filter((record) => {
       if (selectedTypes.size > 0 && !selectedTypes.has(record.type)) return false;
-      if (!isWithinPeriod(record.occurredAt, period, customRange)) return false;
+      if (!isWithinPeriod(record.occurredAt, period, customRange, dateFnsLocale)) return false;
       return true;
     });
-  }, [records, selectedTypes, period, customRange]);
+  }, [records, selectedTypes, period, customRange, dateFnsLocale]);
 
   const isFeedOnlyFilter = selectedTypes.size === 1 && selectedTypes.has('feed');
 
   const rows = useMemo<ListRow[]>(() => {
-    const sections = groupByDay(filteredRecords);
+    const sections = groupByDay(filteredRecords, t, dateFnsLocale);
     return sections.flatMap((section) => {
       const countLabel =
         selectedTypes.size === 0
           ? null
           : isFeedOnlyFilter
-            ? buildFeedBreakdown(section.data)
-            : `${section.data.length} kayıt`;
+            ? buildFeedBreakdown(section.data, feedSubtypeLabels, t)
+            : t('records.recordCount', { n: section.data.length });
 
       return [
         { kind: 'header' as const, title: section.title, countLabel },
         ...section.data.map((record) => ({ kind: 'record' as const, record })),
       ];
     });
-  }, [filteredRecords, selectedTypes, isFeedOnlyFilter]);
+  }, [filteredRecords, selectedTypes, isFeedOnlyFilter, feedSubtypeLabels, t, dateFnsLocale]);
 
   const hasFilters = selectedTypes.size > 0 || period !== 'all';
 
   return (
-    <SafeAreaView className="flex-1 bg-surface" edges={['top', 'left', 'right']}>
+    <SafeAreaView className="flex-1 bg-surface dark:bg-surface-night" edges={['top', 'left', 'right']}>
       <View className="px-5 pt-4">
         <RecordFilters
           selectedTypes={selectedTypes}
@@ -120,43 +129,47 @@ export default function RecordsScreen() {
       {!hasHydrated ? (
         <RecordListSkeleton />
       ) : (
-      <FlashList
-        data={rows}
-        keyExtractor={(row) => (row.kind === 'header' ? `h-${row.title}` : row.record.id)}
-        getItemType={(row) => row.kind}
-        contentContainerStyle={{ paddingHorizontal: 20, paddingTop: 16, paddingBottom: 120 }}
-        ListEmptyComponent={
-          <View className="items-center justify-center px-8 pt-16">
-            <Text className="text-ink text-base font-semibold text-center">
-              {records.length === 0 ? 'Henüz kayıt yok' : 'Bu filtrelere uygun kayıt yok'}
-            </Text>
-            <Text className="text-muted text-sm text-center mt-1">
-              {records.length === 0
-                ? 'Ana Sayfa sekmesinden kaka, çiş, mama veya uyku kaydı oluşturduğunda burada görünecek.'
-                : hasFilters
-                  ? 'Farklı bir filtre deneyin veya filtreleri temizleyin.'
-                  : ''}
-            </Text>
-            {records.length === 0 && (
-              <View className="mt-6">
-                <Button label="Ana Sayfa'ya git" onPress={() => router.navigate('/')} />
-              </View>
-            )}
-          </View>
-        }
-        renderItem={({ item }) =>
-          item.kind === 'header' ? (
-            <View className="flex-row items-baseline justify-between mt-4 mb-2">
-              <Text className="text-muted text-xs font-semibold uppercase">{item.title}</Text>
-              {item.countLabel ? (
-                <Text className="text-muted text-xs font-semibold">{item.countLabel}</Text>
-              ) : null}
+        <FlashList
+          data={rows}
+          keyExtractor={(row) => (row.kind === 'header' ? `h-${row.title}` : row.record.id)}
+          getItemType={(row) => row.kind}
+          contentContainerStyle={{ paddingHorizontal: 20, paddingTop: 16, paddingBottom: 120 }}
+          ListEmptyComponent={
+            <View className="items-center justify-center px-8 pt-16">
+              <Text className="text-ink dark:text-ink-night text-base font-semibold text-center">
+                {records.length === 0 ? t('records.emptyTitle') : t('records.emptyTitleFiltered')}
+              </Text>
+              <Text className="text-muted dark:text-muted-night text-sm text-center mt-1">
+                {records.length === 0
+                  ? t('records.emptySubtitleNoRecords')
+                  : hasFilters
+                    ? t('records.emptySubtitleFiltered')
+                    : ''}
+              </Text>
+              {records.length === 0 && (
+                <View className="mt-6">
+                  <Button label={t('records.goHome')} onPress={() => router.navigate('/')} />
+                </View>
+              )}
             </View>
-          ) : (
-            <RecordListItem record={item.record} onPress={setEditingRecord} onDelete={deleteRecord} />
-          )
-        }
-      />
+          }
+          renderItem={({ item }) =>
+            item.kind === 'header' ? (
+              <View className="flex-row items-baseline justify-between mt-4 mb-2">
+                <Text className="text-muted dark:text-muted-night text-xs font-semibold uppercase">
+                  {item.title}
+                </Text>
+                {item.countLabel ? (
+                  <Text className="text-muted dark:text-muted-night text-xs font-semibold">
+                    {item.countLabel}
+                  </Text>
+                ) : null}
+              </View>
+            ) : (
+              <RecordListItem record={item.record} onPress={setEditingRecord} onDelete={deleteRecord} />
+            )
+          }
+        />
       )}
 
       <RecordDetailsSheet

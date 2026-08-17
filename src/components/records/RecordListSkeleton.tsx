@@ -20,11 +20,11 @@ function SkeletonRow() {
   return (
     <Animated.View
       style={animatedStyle}
-      className="flex-row items-center gap-3 bg-surface-elevated border border-border rounded-2xl px-4 py-3 mb-2">
-      <View className="h-10 w-10 rounded-full bg-border" />
+      className="flex-row items-center gap-3 bg-surface-elevated dark:bg-surface-elevated-night border border-border dark:border-border-night rounded-2xl px-4 py-3 mb-2">
+      <View className="h-10 w-10 rounded-full bg-border dark:bg-border-night" />
       <View className="flex-1 gap-2">
-        <View className="h-3.5 w-24 rounded-full bg-border" />
-        <View className="h-3 w-16 rounded-full bg-border" />
+        <View className="h-3.5 w-24 rounded-full bg-border dark:bg-border-night" />
+        <View className="h-3 w-16 rounded-full bg-border dark:bg-border-night" />
       </View>
     </Animated.View>
   );

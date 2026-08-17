@@ -1,22 +1,26 @@
-import { format, isToday, isYesterday, subMinutes } from 'date-fns';
-import { tr } from 'date-fns/locale';
+import { format, isToday, isYesterday, subMinutes, type Locale } from 'date-fns';
+import { tr as trLocale } from 'date-fns/locale';
 
+import { interpolate, resolve, type TFunction } from '@/i18n/core';
+import { tr as trDictionary } from '@/i18n/translations';
 import type { BabyRecord } from '@/types/record';
+
+/** Used when a caller doesn't have a live `t` from `useTranslation()` (e.g. the widget's headless JS context, which stays Turkish-only). */
+const defaultT: TFunction = (key, params) => interpolate(resolve(trDictionary, key), params);
 
 export interface QuickPickOption {
   label: string;
   minutesAgo: number;
 }
 
-export const QUICK_PICK_OPTIONS: QuickPickOption[] = [
-  { label: 'Şimdi', minutesAgo: 0 },
-  { label: '3 dakika önce', minutesAgo: 3 },
-  { label: '5 dakika önce', minutesAgo: 5 },
-  { label: '10 dakika önce', minutesAgo: 10 },
-  { label: '15 dakika önce', minutesAgo: 15 },
-  { label: '30 dakika önce', minutesAgo: 30 },
-  { label: '60 dakika önce', minutesAgo: 60 },
-];
+const QUICK_PICK_MINUTES = [0, 3, 5, 10, 15, 30, 60];
+
+export function getQuickPickOptions(t: TFunction = defaultT): QuickPickOption[] {
+  return QUICK_PICK_MINUTES.map((minutesAgo) => ({
+    minutesAgo,
+    label: minutesAgo === 0 ? t('time.now') : t('time.minutesAgo', { n: minutesAgo }),
+  }));
+}
 
 export function offsetToIso(minutesAgo: number): string {
   return subMinutes(new Date(), minutesAgo).toISOString();
@@ -37,31 +41,35 @@ export function formatTime(iso: string): string {
   return format(new Date(iso), 'HH:mm');
 }
 
-export function formatDuration(minutes: number): string {
+export function formatDuration(minutes: number, t: TFunction = defaultT): string {
   const hours = Math.floor(minutes / 60);
   const mins = minutes % 60;
-  if (hours === 0) return `${mins} dk`;
-  if (mins === 0) return `${hours} sa`;
-  return `${hours} sa ${mins} dk`;
+  const h = t('time.hoursShort');
+  const m = t('time.minutesShort');
+  if (hours === 0) return `${mins} ${m}`;
+  if (mins === 0) return `${hours} ${h}`;
+  return `${hours} ${h} ${mins} ${m}`;
 }
 
-export function todayDateLabel(): string {
-  return `Bugün, ${format(new Date(), 'd MMMM', { locale: tr })}`;
+export function todayDateLabel(t: TFunction = defaultT, locale: Locale = trLocale): string {
+  return t('time.todayDateLabel', { date: format(new Date(), 'd MMMM', { locale }) });
 }
 
-export function formatDurationCompact(minutes: number): string {
+export function formatDurationCompact(minutes: number, t: TFunction = defaultT): string {
   const hours = Math.floor(minutes / 60);
   const mins = minutes % 60;
-  if (hours === 0) return `${mins}dk`;
-  if (mins === 0) return `${hours}s`;
-  return `${hours}s ${mins}dk`;
+  const h = t('time.hoursCompact');
+  const m = t('time.minutesCompact');
+  if (hours === 0) return `${mins}${m}`;
+  if (mins === 0) return `${hours}${h}`;
+  return `${hours}${h} ${mins}${m}`;
 }
 
-export function dayLabel(iso: string): string {
+export function dayLabel(iso: string, t: TFunction = defaultT, locale: Locale = trLocale): string {
   const date = new Date(iso);
-  if (isToday(date)) return 'Bugün';
-  if (isYesterday(date)) return 'Dün';
-  return format(date, 'd MMMM EEEE', { locale: tr });
+  if (isToday(date)) return t('time.today');
+  if (isYesterday(date)) return t('time.yesterday');
+  return format(date, 'd MMMM EEEE', { locale });
 }
 
 export interface RecordSection {
@@ -69,7 +77,11 @@ export interface RecordSection {
   data: BabyRecord[];
 }
 
-export function groupByDay(records: BabyRecord[]): RecordSection[] {
+export function groupByDay(
+  records: BabyRecord[],
+  t: TFunction = defaultT,
+  locale: Locale = trLocale
+): RecordSection[] {
   const groups = new Map<string, BabyRecord[]>();
 
   for (const record of records) {
@@ -85,7 +97,7 @@ export function groupByDay(records: BabyRecord[]): RecordSection[] {
   return Array.from(groups.entries())
     .sort(([a], [b]) => (a < b ? 1 : -1))
     .map(([key, data]) => ({
-      title: dayLabel(data[0]?.occurredAt ?? key),
+      title: dayLabel(data[0]?.occurredAt ?? key, t, locale),
       data,
     }));
 }

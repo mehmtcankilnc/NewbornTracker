@@ -1,14 +1,17 @@
 import { Ionicons } from '@expo/vector-icons';
 import { format } from 'date-fns';
-import { tr } from 'date-fns/locale';
 import { useEffect, useState } from 'react';
 import { Pressable, Text, TextInput, View } from 'react-native';
 import DatePicker from 'react-native-date-picker';
 
 import { Button } from '@/components/ui/Button';
 import { Sheet } from '@/components/ui/Sheet';
-import { FEED_SUBTYPE_LABELS, FEED_SUBTYPE_ORDER, RECORD_TYPES } from '@/constants/recordTypes';
+import { FEED_SUBTYPE_ORDER } from '@/constants/recordTypes';
+import { useFeedSubtypeLabels } from '@/hooks/useFeedSubtypeLabels';
+import { useRecordTypeMeta } from '@/hooks/useRecordTypeMeta';
+import { useTranslation } from '@/i18n';
 import type { RecordEdits } from '@/stores/useRecordsStore';
+import { useAppTheme } from '@/theme/useAppTheme';
 import type { BabyRecord, FeedSubtype } from '@/types/record';
 
 interface RecordDetailsSheetProps {
@@ -20,6 +23,10 @@ interface RecordDetailsSheetProps {
 type EditingField = 'date' | 'time' | null;
 
 export function RecordDetailsSheet({ record, onSave, onClose }: RecordDetailsSheetProps) {
+  const { t, dateFnsLocale } = useTranslation();
+  const { colors, scheme } = useAppTheme();
+  const recordTypeMeta = useRecordTypeMeta();
+  const feedSubtypeLabels = useFeedSubtypeLabels();
   const [occurredAt, setOccurredAt] = useState(new Date());
   const [subtypes, setSubtypes] = useState<Set<FeedSubtype>>(new Set());
   const [amountInput, setAmountInput] = useState('');
@@ -39,7 +46,7 @@ export function RecordDetailsSheet({ record, onSave, onClose }: RecordDetailsShe
 
   if (!displayRecord) return null;
 
-  const meta = RECORD_TYPES[displayRecord.type];
+  const meta = recordTypeMeta[displayRecord.type];
   const isFeed = displayRecord.type === 'feed';
 
   const isDateChanged = occurredAt.getTime() !== new Date(displayRecord.occurredAt).getTime();
@@ -100,27 +107,31 @@ export function RecordDetailsSheet({ record, onSave, onClose }: RecordDetailsShe
           style={{ backgroundColor: meta.accentBg }}>
           <Ionicons name={meta.icon} size={16} color={meta.accent} />
         </View>
-        <Text className="text-ink text-lg font-semibold">{meta.label} kaydını düzenle</Text>
+        <Text className="text-ink dark:text-ink-night text-lg font-semibold">
+          {t('recordDetails.editTitle', { label: meta.label })}
+        </Text>
       </View>
 
       <View className="flex-row gap-3">
         <Pressable
           onPress={() => startEditing('date')}
           accessibilityRole="button"
-          accessibilityLabel="Tarih"
-          className="flex-1 bg-surface-elevated rounded-2xl px-4 py-3">
-          <Text className="text-muted text-xs">Tarih</Text>
-          <Text className="text-ink text-sm font-semibold mt-0.5">
-            {format(occurredAt, 'd MMMM yyyy', { locale: tr })}
+          accessibilityLabel={t('recordDetails.date')}
+          className="flex-1 bg-surface-elevated dark:bg-surface-elevated-night rounded-2xl px-4 py-3">
+          <Text className="text-muted dark:text-muted-night text-xs">{t('recordDetails.date')}</Text>
+          <Text className="text-ink dark:text-ink-night text-sm font-semibold mt-0.5">
+            {format(occurredAt, 'd MMMM yyyy', { locale: dateFnsLocale })}
           </Text>
         </Pressable>
         <Pressable
           onPress={() => startEditing('time')}
           accessibilityRole="button"
-          accessibilityLabel="Saat"
-          className="flex-1 bg-surface-elevated rounded-2xl px-4 py-3">
-          <Text className="text-muted text-xs">Saat</Text>
-          <Text className="text-ink text-sm font-semibold mt-0.5">{format(occurredAt, 'HH:mm')}</Text>
+          accessibilityLabel={t('recordDetails.time')}
+          className="flex-1 bg-surface-elevated dark:bg-surface-elevated-night rounded-2xl px-4 py-3">
+          <Text className="text-muted dark:text-muted-night text-xs">{t('recordDetails.time')}</Text>
+          <Text className="text-ink dark:text-ink-night text-sm font-semibold mt-0.5">
+            {format(occurredAt, 'HH:mm')}
+          </Text>
         </Pressable>
       </View>
 
@@ -128,10 +139,11 @@ export function RecordDetailsSheet({ record, onSave, onClose }: RecordDetailsShe
         modal
         open={editingField !== null}
         mode={editingField ?? 'date'}
+        theme={scheme}
         date={occurredAt}
-        title={editingField === 'time' ? 'Saat seç' : 'Tarih seç'}
-        confirmText="Seç"
-        cancelText="Vazgeç"
+        title={editingField === 'time' ? t('recordDetails.pickTimeTitle') : t('recordDetails.pickDateTitle')}
+        confirmText={t('recordDetails.pickerConfirm')}
+        cancelText={t('recordDetails.pickerCancel')}
         onConfirm={(value) => {
           if (editingField) commitField(editingField, value);
           setEditingField(null);
@@ -141,7 +153,9 @@ export function RecordDetailsSheet({ record, onSave, onClose }: RecordDetailsShe
 
       {isFeed && (
         <>
-          <Text className="text-ink text-sm font-semibold mt-5 mb-2">Mama türü</Text>
+          <Text className="text-ink dark:text-ink-night text-sm font-semibold mt-5 mb-2">
+            {t('feedDetails.title')}
+          </Text>
           <View className="gap-2">
             {FEED_SUBTYPE_ORDER.map((option) => {
               const isSelected = subtypes.has(option);
@@ -151,12 +165,15 @@ export function RecordDetailsSheet({ record, onSave, onClose }: RecordDetailsShe
                   onPress={() => toggleSubtype(option)}
                   accessibilityRole="checkbox"
                   accessibilityState={{ checked: isSelected }}
-                  accessibilityLabel={FEED_SUBTYPE_LABELS[option]}
+                  accessibilityLabel={feedSubtypeLabels[option]}
                   className={`min-h-[48px] rounded-full flex-row items-center justify-between px-4 active:opacity-70 ${
-                    isSelected ? 'bg-primary' : 'bg-surface-elevated'
+                    isSelected ? 'bg-primary dark:bg-primary-night' : 'bg-surface-elevated dark:bg-surface-elevated-night'
                   }`}>
-                  <Text className={`text-base ${isSelected ? 'text-white font-semibold' : 'text-ink'}`}>
-                    {FEED_SUBTYPE_LABELS[option]}
+                  <Text
+                    className={`text-base ${
+                      isSelected ? 'text-white font-semibold' : 'text-ink dark:text-ink-night'
+                    }`}>
+                    {feedSubtypeLabels[option]}
                   </Text>
                   {isSelected && <Ionicons name="checkmark" size={18} color="#FFFFFF" />}
                 </Pressable>
@@ -165,24 +182,26 @@ export function RecordDetailsSheet({ record, onSave, onClose }: RecordDetailsShe
           </View>
 
           <View className="mt-4">
-            <Text className="text-muted text-xs font-semibold mb-1.5">Miktar (ml, opsiyonel)</Text>
+            <Text className="text-muted dark:text-muted-night text-xs font-semibold mb-1.5">
+              {t('feedDetails.amountLabel')}
+            </Text>
             <TextInput
               value={amountInput}
               onChangeText={setAmountInput}
-              placeholder="Örn. 120"
-              placeholderTextColor="#8D8975"
+              placeholder={t('feedDetails.amountPlaceholder')}
+              placeholderTextColor={colors.muted}
               keyboardType="numeric"
               maxLength={4}
-              accessibilityLabel="Miktar (ml)"
-              className="bg-surface-elevated rounded-full px-4 h-12 text-ink text-base"
+              accessibilityLabel={t('feedDetails.amountLabel')}
+              className="bg-surface-elevated dark:bg-surface-elevated-night rounded-full px-4 h-12 text-ink dark:text-ink-night text-base"
             />
           </View>
         </>
       )}
 
       <View className="mt-5 gap-3">
-        <Button label="Kaydet" onPress={handleSave} disabled={!canSave} />
-        <Button label="İptal" variant="secondary" onPress={onClose} />
+        <Button label={t('recordDetails.save')} onPress={handleSave} disabled={!canSave} />
+        <Button label={t('recordDetails.cancel')} variant="secondary" onPress={onClose} />
       </View>
     </Sheet>
   );
